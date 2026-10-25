@@ -1,0 +1,24 @@
+[package]
+name = "pg-lock-xray"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Static PostgreSQL migration lock scanner with zero-downtime SQL rewrites and MCP tools"
+authors = ["Augusto Cerrutti <augustocerruttisatto@gmail.com>"]
+repository = "https://github.com/kanchingyg/pg-lock-xray"
+readme = "README.md"
+
+[[bin]]
+name = "pg-lock-xray"
+path = "src/main.rs"
+
+[lib]
+name = "pg_lock_xray"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
+regex = "1"
