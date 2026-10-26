@@ -1,20 +1,14 @@
 import { createHash } from "node:crypto";
 
 import { assertLoopbackLlmBaseUrl } from "./sql-path.js";
-
-/** Constant `DEFAULT_N_CTX` defining default n ctx. */
 export const DEFAULT_N_CTX = 4096;
 const TRUNC_MARKER = "[…truncated by pg-lock-xray…]";
-
-/** Configuration and data shape for `McpToolAnnotations` (mcp tool annotations). */
 export type McpToolAnnotations = {
   readOnlyHint?: boolean;
   destructiveHint?: boolean;
   idempotentHint?: boolean;
   openWorldHint?: boolean;
 };
-
-/** Configuration and data shape for `McpToolDefinition` (mcp tool definition). */
 export type McpToolDefinition<TArgs = Record<string, unknown>, TResult = unknown> = {
   name: string;
   description: string;
@@ -31,34 +25,24 @@ export type McpToolDefinition<TArgs = Record<string, unknown>, TResult = unknown
     ctx: { dryRun: boolean; allowWrite: boolean; nCtx: number },
   ) => Promise<TResult> | TResult;
 };
-
-/** Configuration and data shape for `GuardOptions` (guard options). */
 export type GuardOptions = { allowWrite?: boolean; dryRun?: boolean };
 
 let allowWrite = false;
 let dryRun = false;
 let nCtx = DEFAULT_N_CTX;
-
-/** Executes `setGuards` to set guards in `pg-lock-xray`. */
 export function setGuards(opts: GuardOptions): void {
   allowWrite = Boolean(opts.allowWrite);
   dryRun = Boolean(opts.dryRun);
 }
-
-/** Executes `setNCtx` to set nctx in `pg-lock-xray`. */
 export function setNCtx(value: number): void {
   nCtx = value > 0 ? value : DEFAULT_N_CTX;
 }
-
-/** Executes `headTailTruncate` to head tail truncate in `pg-lock-xray`. */
 export function headTailTruncate(text: string, maxChars: number): string {
   if (text.length <= maxChars) return text;
   const headLen = Math.floor(maxChars * 0.6);
   const tailLen = Math.max(0, Math.floor(maxChars * 0.4) - TRUNC_MARKER.length);
   return text.slice(0, headLen) + TRUNC_MARKER + text.slice(-tailLen);
 }
-
-/** Executes `canonicalizeJson` to canonicalize json in `pg-lock-xray`. */
 export function canonicalizeJson(value: unknown): string {
   if (value === null || value === undefined) return "null";
   if (typeof value !== "object") return JSON.stringify(value);
@@ -69,14 +53,10 @@ export function canonicalizeJson(value: unknown): string {
 }
 
 const loopState = { lastHash: "", repeatCount: 0 };
-
-/** Executes `resetLoopBreaker` to reset loop breaker in `pg-lock-xray`. */
 export function resetLoopBreaker(): void {
   loopState.lastHash = "";
   loopState.repeatCount = 0;
 }
-
-/** Executes `checkLoopBreaker` to check loop breaker in `pg-lock-xray`. */
 export function checkLoopBreaker(toolName: string, args: unknown): string | null {
   const h = createHash("sha256")
     .update(`${toolName}:${canonicalizeJson(args)}`)
@@ -91,15 +71,11 @@ export function checkLoopBreaker(toolName: string, args: unknown): string | null
   }
   return null;
 }
-
-/** Executes `isMutatingMcpTool` to is mutating mcp tool in `pg-lock-xray`. */
 export function isMutatingMcpTool(
   tool: { mutates?: boolean; annotations?: { destructiveHint?: boolean } } | null | undefined,
 ): boolean {
   return Boolean(tool?.mutates || tool?.annotations?.destructiveHint);
 }
-
-/** Executes `guardMutatingTool` to guard mutating tool in `pg-lock-xray`. */
 export function guardMutatingTool(
   tool: { mutates?: boolean; annotations?: { destructiveHint?: boolean } } | null | undefined,
 ): { blocked: boolean; reason?: string } {
@@ -115,22 +91,16 @@ const WIN_DRIVE_RE = /^([A-Za-z]):\\(.*)$/;
 const WSL_RE = /^\/mnt\/([a-z])\/(.*)$/i;
 const SECRET_RE =
   /(?:sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36}|Bearer\s+[a-zA-Z0-9._-]+)/g;
-
-/** Executes `windowsToWsl` to windows to wsl in `pg-lock-xray`. */
 export function windowsToWsl(p: string): string {
   const m = p.match(WIN_DRIVE_RE);
   if (!m) return p;
   return `/mnt/${m[1].toLowerCase()}/${m[2].replace(/\\/g, "/")}`;
 }
-
-/** Executes `wslToWindows` to wsl to windows in `pg-lock-xray`. */
 export function wslToWindows(p: string): string {
   const m = p.match(WSL_RE);
   if (!m) return p;
   return `${m[1].toUpperCase()}:\\${m[2].replace(/\//g, "\\")}`;
 }
-
-/** Executes `normalizePathsDeep` to normalize paths deep in `pg-lock-xray`. */
 export function normalizePathsDeep<T>(value: T, toWsl: boolean): T {
   if (typeof value === "string") {
     if (toWsl && WIN_DRIVE_RE.test(value)) return windowsToWsl(value) as T;
@@ -147,19 +117,13 @@ export function normalizePathsDeep<T>(value: T, toWsl: boolean): T {
   }
   return value;
 }
-
-/** Executes `redactSecrets` to redact secrets in `pg-lock-xray`. */
 export function redactSecrets(text: string): string {
   return text.replace(SECRET_RE, "[REDACTED]");
 }
 
 let stdoutHijacked = false;
 let jsonRpcWrite: ((line: string) => void) | null = null;
-
-/** Constant `jsonRpcFrameLog` defining json rpc frame log. */
 export const jsonRpcFrameLog: string[] = [];
-
-/** Executes `hijackStdoutForMcp` to hijack stdout for mcp in `pg-lock-xray`. */
 export function hijackStdoutForMcp(): void {
   if (stdoutHijacked) return;
   stdoutHijacked = true;
@@ -174,19 +138,13 @@ export function hijackStdoutForMcp(): void {
     return true;
   }) as typeof process.stdout.write;
 }
-
-/** Executes `writeJsonRpcFrame` to write json rpc frame in `pg-lock-xray`. */
 export function writeJsonRpcFrame(obj: object): void {
   const line = JSON.stringify(obj) + "\n";
   jsonRpcFrameLog.push(line);
   if (jsonRpcWrite) jsonRpcWrite(line);
   else process.stdout.write(line);
 }
-
-/** Configuration and data shape for `NCtxSource` (nctx source). */
 export type NCtxSource = "llama.cpp" | "ollama" | "vllm" | "fallback";
-
-/** Executes `probeNCtx` to probe nctx in `pg-lock-xray`. */
 export async function probeNCtx(
   baseUrl: string,
   fetchImpl: typeof fetch = fetch,
@@ -233,21 +191,13 @@ export async function probeNCtx(
 
 const THINKING_BLOCK_RE =
   /<(?:redacted_thinking|think)>[\s\S]*?<\/(?:redacted_thinking|think)>/gi;
-
-/** Executes `stripRedactedThinking` to strip redacted thinking in `pg-lock-xray`. */
 export function stripRedactedThinking(text: string): string {
   return text.replace(THINKING_BLOCK_RE, "").trim();
 }
-
-/** Configuration and data shape for `ReasoningState` (reasoning state). */
 export type ReasoningState = { inToolLoop: boolean };
-
-/** Executes `createReasoningState` to create reasoning state in `pg-lock-xray`. */
 export function createReasoningState(): ReasoningState {
   return { inToolLoop: false };
 }
-
-/** Executes `applyReasoningContentPolicy` to apply reasoning content policy in `pg-lock-xray`. */
 export function applyReasoningContentPolicy(
   messages: Array<Record<string, unknown>>,
   state: ReasoningState,
@@ -261,8 +211,6 @@ export function applyReasoningContentPolicy(
     return out;
   });
 }
-
-/** Configuration and data shape for `ProviderId` (provider id). */
 export type ProviderId =
   | "deepseek"
   | "dashscope"
@@ -270,8 +218,6 @@ export type ProviderId =
   | "ollama"
   | "openai"
   | "generic";
-
-/** Executes `detectProvider` to detect provider in `pg-lock-xray`. */
 export function detectProvider(baseUrl: string): ProviderId {
   const u = baseUrl.toLowerCase();
   if (u.includes("deepseek")) return "deepseek";
@@ -281,16 +227,12 @@ export function detectProvider(baseUrl: string): ProviderId {
   if (u.includes("openai")) return "openai";
   return "generic";
 }
-
-/** Executes `normalizeToolChoice` to normalize tool choice in `pg-lock-xray`. */
 export function normalizeToolChoice(toolChoice: unknown, provider: ProviderId): unknown {
   if (toolChoice === "required" && (provider === "dashscope" || provider === "moonshot")) {
     return "auto";
   }
   return toolChoice;
 }
-
-/** Executes `sanitizeRequestBody` to sanitize request body in `pg-lock-xray`. */
 export function sanitizeRequestBody(
   body: Record<string, unknown>,
   reasoner: boolean,
@@ -302,8 +244,6 @@ export function sanitizeRequestBody(
   }
   return out;
 }
-
-/** Executes `buildRecencyAnchor` to build recency anchor in `pg-lock-xray`. */
 export function buildRecencyAnchor(sigs: Array<{ name: string; summary: string }>): string {
   const lines = sigs.map((s) => `- ${s.name}: ${s.summary}`);
   return [
@@ -312,8 +252,6 @@ export function buildRecencyAnchor(sigs: Array<{ name: string; summary: string }
     'To call a tool, output ONLY: <tool_call>{"name": "TOOL_NAME", "arguments": {...}}</tool_call>',
   ].join("\n");
 }
-
-/** Executes `anchorPromptTail` to anchor prompt tail in `pg-lock-xray`. */
 export function anchorPromptTail(prompt: string, anchor: string): string {
   const marker = "\nASSISTANT:";
   const idx = prompt.lastIndexOf(marker);
@@ -368,8 +306,6 @@ function braceDepth(text: string): number {
   }
   return depth;
 }
-
-/** Executes `parseDirtyToolCall` to parse dirty tool call in `pg-lock-xray`. */
 export function parseDirtyToolCall(
   rawOutput: string,
   tools: McpToolDefinition[],
@@ -407,28 +343,20 @@ export function parseDirtyToolCall(
 
   return null;
 }
-
-/** Executes `l2Normalize` to l2 normalize in `pg-lock-xray`. */
 export function l2Normalize(vec: number[]): number[] {
   let sum = 0;
   for (const v of vec) sum += v * v;
   const norm = Math.sqrt(sum) || 1;
   return vec.map((v) => v / norm);
 }
-
-/** Executes `mrlSlice` to mrl slice in `pg-lock-xray`. */
 export function mrlSlice(vec: number[], dimensions: number): number[] {
   return l2Normalize(vec.slice(0, dimensions));
 }
-
-/** Executes `chunkArray` to chunk array in `pg-lock-xray`. */
 export function chunkArray<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
   return out;
 }
-
-/** Executes `normalizeEmbedBatch` to normalize embed batch in `pg-lock-xray`. */
 export async function normalizeEmbedBatch(
   inputs: string[],
   options: {
@@ -454,8 +382,6 @@ export async function normalizeEmbedBatch(
   const dim = options.dimensions ?? vectors.values().next().value?.length ?? 0;
   return inputs.map((_, i) => vectors.get(i) ?? new Array(dim).fill(0));
 }
-
-/** Executes `normalizeEmbeddingsRequest` to normalize embeddings request in `pg-lock-xray`. */
 export async function normalizeEmbeddingsRequest(
   req: Record<string, unknown>,
   provider: string,
@@ -478,8 +404,6 @@ export async function normalizeEmbeddingsRequest(
   }));
   return { data, model: String(req.model ?? "local") };
 }
-
-/** Executes `callOpenAiCompatChat` to call open ai compat chat in `pg-lock-xray`. */
 export async function callOpenAiCompatChat(
   baseUrl: string,
   body: Record<string, unknown>,
@@ -501,16 +425,12 @@ export async function callOpenAiCompatChat(
   const raw = msg?.content ?? msg?.reasoning_content ?? "";
   return stripRedactedThinking(raw);
 }
-
-/** Configuration and data shape for `McpServerOptions` (mcp server options). */
 export type McpServerOptions = {
   tools: McpToolDefinition[];
   pathToWsl?: boolean;
   serverName?: string;
   version?: string;
 };
-
-/** Executes `startMcpServer` to start mcp server in `pg-lock-xray`. */
 export function startMcpServer(
   meta: { name: string; version: string },
   tools: McpToolDefinition[],
@@ -549,8 +469,6 @@ export function startMcpServer(
     }
   });
 }
-
-/** Configuration and data shape for `DispatchCtx` (dispatch ctx). */
 export type DispatchCtx = {
   tools: McpToolDefinition[];
   handlers: Map<string, McpToolDefinition>;
@@ -558,8 +476,6 @@ export type DispatchCtx = {
   serverName: string;
   version: string;
 };
-
-/** Executes `dispatchMcpMessage` to dispatch mcp message in `pg-lock-xray`. */
 export function dispatchMcpMessage(
   msg: {
     jsonrpc?: string;

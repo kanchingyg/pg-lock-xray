@@ -6,10 +6,6 @@
 [![JSR Score](https://jsr.io/badges/@kanchingyg/pg-lock-xray/score)](https://jsr.io/@kanchingyg/pg-lock-xray/score)
 [![Rust](https://img.shields.io/badge/engine-Rust_%2B_TypeScript-dea584)](https://github.com/kanchingyg/pg-lock-xray)
 [![license](https://img.shields.io/github/license/kanchingyg/pg-lock-xray)](https://github.com/kanchingyg/pg-lock-xray/blob/HEAD/LICENSE)
-[![npm](https://img.shields.io/npm/v/pg-lock-xray)](https://www.npmjs.com/package/pg-lock-xray)
-[![JSR](https://jsr.io/badges/@kanchingyg/pg-lock-xray)](https://jsr.io/@kanchingyg/pg-lock-xray)
-[![Rust](https://img.shields.io/badge/engine-Rust-dea584)](https://github.com/kanchingyg/pg-lock-xray)
-[![license](https://img.shields.io/github/license/kanchingyg/pg-lock-xray)](https://github.com/kanchingyg/pg-lock-xray/blob/HEAD/LICENSE)
 
 **One line:** `npx pg-lock-xray prisma/migrations` (or `bunx pg-lock-xray prisma/migrations`): catch `ACCESS EXCLUSIVE` PostgreSQL migration lock hazards before production.
 

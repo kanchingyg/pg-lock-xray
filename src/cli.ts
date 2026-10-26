@@ -16,7 +16,7 @@ import {
 } from "./sql-analyzer.js";
 import { rewriteSqlDocument } from "./zero-downtime-rewriter.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 
 function buildMcpTools(): McpToolDefinition[] {
   return [
