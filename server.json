@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.kanchingyg/pg-lock-xray",
+  "description": "Static PostgreSQL migration lock scanner with zero-downtime SQL rewrites and MCP tools",
+  "repository": {
+    "url": "https://github.com/kanchingyg/pg-lock-xray",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "pg-lock-xray",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
